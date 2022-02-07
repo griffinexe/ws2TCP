@@ -15,14 +15,20 @@ import (
 
 // TODO: fix flags
 
-var tcpAddr string
+// var tcpAddr string
+var addrMap map[string]string
 
 var wsUp = websocket.Upgrader{}
 
 type cfg struct {
-	Listen  string `json:"listen"`
-	Path    string `json:"path"`
-	TcpAddr string `json:"tcpaddr"`
+	Listen     string            `json:"listen"`
+	Path       string            `json:"path"`
+	ServiceMap map[string]string `json:"servicemap"`
+	Tls        struct {
+		Enabled  bool   `json:"enabled"`
+		KeyFile  string `json:"keyfile"`
+		CertFile string `json:"certfile"`
+	} `json:"tls"`
 }
 
 func main() {
@@ -49,17 +55,74 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	tcpAddr = ws2tcpCfg.TcpAddr
+	addrMap = ws2tcpCfg.ServiceMap
 
 	// start web server
 	mux := http.NewServeMux()
-	mux.HandleFunc(ws2tcpCfg.Path, wsHandler)
-	http.ListenAndServe(ws2tcpCfg.Listen, mux)
+	// mux.HandleFunc(ws2tcpCfg.Path, wsHandler)
+	print("loading ", len(addrMap), " handleres\n")
+	println(addrMap)
+	for k, v := range addrMap {
+
+		// mux.HandleFunc(ws2tcpCfg.Path+"/"+k, func(w http.ResponseWriter, r *http.Request) {
+		// 	println("hit ", k, "lcoal ", v)
+		// 	println(r.URL.Path)
+		// 	conn, err := wsUp.Upgrade(w, r, nil)
+		// 	if err != nil {
+		// 		log.Println(err)
+		// 	}
+		// 	ioConn := rwc{c: conn}
+		// 	netConn, err := net.Dial("tcp", v)
+		// 	if err != nil {
+		// 		log.Println(err)
+		// 	}
+		// 	ch := make(chan bool)
+		// 	go copyWorker(netConn, &ioConn, ch)
+		// 	go copyWorker(&ioConn, netConn, ch)
+		// 	<-ch
+		// 	netConn.Close()
+		// 	ioConn.c.Close()
+		// 	<-ch
+		// })
+		mux.HandleFunc(ws2tcpCfg.Path+"/"+k, getHandler(k, v))
+	}
+	// mux.HandleFunc(ws2tcpCfg.Path+"/remotecfg", func(w http.ResponseWriter, r *http.Request) {
+
+	// })
+	if ws2tcpCfg.Tls.Enabled {
+		http.ListenAndServeTLS(ws2tcpCfg.Listen, ws2tcpCfg.Tls.CertFile, ws2tcpCfg.Tls.KeyFile, mux)
+	} else {
+		http.ListenAndServe(ws2tcpCfg.Listen, mux)
+	}
 }
 
 func copyWorker(src io.Reader, dst io.Writer, doneCh chan bool) {
 	io.Copy(dst, src)
 	doneCh <- true
+}
+
+func getHandler(k, v string) func(w http.ResponseWriter, r *http.Request) {
+	println("k: ", "/"+k, " v: ", v)
+	return func(w http.ResponseWriter, r *http.Request) {
+		println("hit ", k, "lcoal ", v)
+		println(r.URL.Path)
+		conn, err := wsUp.Upgrade(w, r, nil)
+		if err != nil {
+			log.Println(err)
+		}
+		ioConn := rwc{c: conn}
+		netConn, err := net.Dial("tcp", v)
+		if err != nil {
+			log.Println(err)
+		}
+		ch := make(chan bool)
+		go copyWorker(netConn, &ioConn, ch)
+		go copyWorker(&ioConn, netConn, ch)
+		<-ch
+		netConn.Close()
+		ioConn.c.Close()
+		<-ch
+	}
 }
 
 type rwc struct {
@@ -100,21 +163,21 @@ func (c *rwc) Read(p []byte) (int, error) {
 	}
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := wsUp.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-	}
-	ioConn := rwc{c: conn}
-	netConn, err := net.Dial("tcp", tcpAddr)
-	if err != nil {
-		log.Println(err)
-	}
-	ch := make(chan bool)
-	go copyWorker(netConn, &ioConn, ch)
-	go copyWorker(&ioConn, netConn, ch)
-	<-ch
-	netConn.Close()
-	ioConn.c.Close()
-	<-ch
-}
+// func wsHandler(w http.ResponseWriter, r *http.Request) {
+// 	conn, err := wsUp.Upgrade(w, r, nil)
+// 	if err != nil {
+// 		log.Println(err)
+// 	}
+// 	ioConn := rwc{c: conn}
+// 	netConn, err := net.Dial("tcp", tcpAddr)
+// 	if err != nil {
+// 		log.Println(err)
+// 	}
+// 	ch := make(chan bool)
+// 	go copyWorker(netConn, &ioConn, ch)
+// 	go copyWorker(&ioConn, netConn, ch)
+// 	<-ch
+// 	netConn.Close()
+// 	ioConn.c.Close()
+// 	<-ch
+// }
