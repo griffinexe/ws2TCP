@@ -169,6 +169,9 @@ import (
 	"miniFTL/util/config"
 )
 
+//TODO:add output, add authentication
+//TODO:implent UDP2WS at branch fusion2
+// https://varshneyabhi.wordpress.com/2014/12/23/simple-udp-clientserver-in-golang/
 func main() {
 	cfg := config.LoadFile("./config.json")
 	if cfg.IsClient() && cfg.IsServer() {
