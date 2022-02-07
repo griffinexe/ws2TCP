@@ -1,4 +1,4 @@
-module ws2tcp
+module miniFTL
 
 go 1.17
 

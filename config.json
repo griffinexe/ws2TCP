@@ -1,16 +1,24 @@
 {
-    "listen":"127.0.0.1:8088",
-    "path":"/ws",
-    "servicemap":{
-        "irc":"192.168.3.194:6667",
-        "gogs":"192.168.3.194:3000",
-        "fileserver":"192.168.3.194:8085",
-        "phone":"192.168.2.116:8080",
-        "localFS":"127.0.0.1:8009"
+    "server":{
+        "listen":"127.0.0.1:8088",
+        "path":"/ws",
+        "servicemap":{
+            "irc":"192.168.3.194:6667",
+            "gogs":"192.168.3.194:3000",
+            "fileserver":"192.168.3.194:8085"
+        },
+        "tls":{
+            "enabled":false,
+            "keyfile":"",
+            "certfile":""
+        }
     },
-    "tls":{
-        "enabled":false,
-        "keyfile":"",
-        "certfile":""
+    "client":{
+        "upstream":"ws://127.0.0.1:8088/ws",
+        "listenmap":{
+            "irc":"127.0.0.1:9000",
+            "gogs":"127.0.0.1:9001",
+            "fileserver":"127.0.0.1:9002"
+        }
     }
 }
