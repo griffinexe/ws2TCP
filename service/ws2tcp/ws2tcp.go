@@ -1,10 +1,10 @@
 package ws2tcp
 
 import (
+	"WSTunnel/util"
+	"WSTunnel/util/config"
 	"io"
 	"log"
-	"miniFTL/util"
-	"miniFTL/util/config"
 	"net"
 	"net/http"
 
@@ -15,27 +15,28 @@ var wsUpgrader = websocket.Upgrader{}
 
 func Start(c *config.Config) {
 	mux := http.NewServeMux()
+	log.Println("loading", len(c.Server.Servicemap), "endpoint(s)")
 	for k, v := range c.Server.Servicemap {
 		mux.HandleFunc(c.Server.Path+"/"+k, getHandler(v))
+		log.Println("service", k, v[0], v[1], "loaded")
 	}
 	if c.Server.TLS.Enabled {
+		log.Println("Starting HTTPS server", c.Server.Listen, "with TLS")
 		http.ListenAndServeTLS(c.Server.Listen, c.Server.TLS.Certfile, c.Server.TLS.Keyfile, mux)
 	} else {
+		log.Println("Starting HTTP server", c.Server.Listen, "without TLS")
 		http.ListenAndServe(c.Server.Listen, mux)
 	}
 }
 
 func getHandler(v []string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("endpoint", r.URL.Path, "hit")
 		conn, err := wsUpgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Println(err)
 		}
 		wsRWC := util.RWC{C: conn}
-		// netConn, err := net.Dial(v[0], v[1])
-		// if err != nil {
-		// 	log.Println(err)
-		// }
 		netConn, netType := getNetConn(v)
 		if netType == "tcp" {
 			tcpConn := netConn.(*net.TCPConn)
@@ -45,13 +46,6 @@ func getHandler(v []string) func(w http.ResponseWriter, r *http.Request) {
 			udpConn := netConn.(*net.UDPConn)
 			biDirectionalCopy(udpConn, &wsRWC)
 		}
-		// ch := make(chan bool)
-		// go util.CopyWorker(netConn, &ioConn, ch)
-		// go util.CopyWorker(&ioConn, netConn, ch)
-		// <-ch
-		// netConn.Close()
-		// ioConn.C.Close()
-		// <-ch
 	}
 }
 

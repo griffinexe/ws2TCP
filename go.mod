@@ -1,4 +1,4 @@
-module miniFTL
+module WSTunnel
 
 go 1.17
 

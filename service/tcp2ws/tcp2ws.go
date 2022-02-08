@@ -1,9 +1,9 @@
 package tcp2ws
 
 import (
+	"WSTunnel/util"
+	"WSTunnel/util/config"
 	"log"
-	"miniFTL/util"
-	"miniFTL/util/config"
 	"net"
 
 	"github.com/gorilla/websocket"
@@ -11,24 +11,16 @@ import (
 
 func Start(c *config.Config) {
 	forever := make(chan bool)
+	log.Println("creating", len(c.Client.Listenmap), "listener(s)")
 	for k, v := range c.Client.Listenmap {
 		go handleEndpoint(k, v, c.Client.Upstream)
+		log.Println("listener", k, v[0], v[1], "created")
 	}
 	<-forever
 }
 
 func handleEndpoint(serviceName string, listenNet []string, upstream string) {
-	// tcpListen, err := net.Listen(listenNet[0], listenNet[1])
-	// if err != nil {
-	// 	log.Println(err)
-	// }
-	// for {
-	// 	tcpConn, err := tcpListen.Accept()
-	// 	if err != nil {
-	// 		log.Println(err)
-	// 	}
-	// 	go handleConn(tcpConn, upstream+"/"+serviceName)
-	// }
+	log.Println("endpoint", serviceName, "hit")
 	netListen, netType := getNetListen(listenNet)
 	if netType == "tcp" {
 		listen := netListen.(*net.TCPListener)
@@ -62,32 +54,6 @@ func handleConn(netConn net.Conn, url string) {
 	upstream.C.Close()
 	<-ch
 }
-
-// func getNetConn(v []string) (interface{}, string) {
-// 	if v[1] == "tcp" {
-// 		raddr, err := net.ResolveTCPAddr("tcp", v[0])
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 		conn, err := net.DialTCP("tcp", nil, raddr)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 		return conn, "tcp"
-// 	}
-// 	if v[1] == "udp" {
-// 		raddr, err := net.ResolveUDPAddr("udp", v[0])
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 		conn, err := net.DialUDP("udp", nil, raddr)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 		return conn, "udp"
-// 	}
-// 	return nil, "error"
-// }
 
 func getNetListen(v []string) (interface{}, string) {
 	if v[1] == "tcp" {
