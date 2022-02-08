@@ -17,17 +17,34 @@ func Start(c *config.Config) {
 	<-forever
 }
 
-func handleEndpoint(serviceName, localListen, upstream string) {
-	tcpListen, err := net.Listen("tcp", localListen)
-	if err != nil {
-		log.Println(err)
-	}
-	for {
-		tcpConn, err := tcpListen.Accept()
-		if err != nil {
-			log.Println(err)
+func handleEndpoint(serviceName string, listenNet []string, upstream string) {
+	// tcpListen, err := net.Listen(listenNet[0], listenNet[1])
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// for {
+	// 	tcpConn, err := tcpListen.Accept()
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 	}
+	// 	go handleConn(tcpConn, upstream+"/"+serviceName)
+	// }
+	netListen, netType := getNetListen(listenNet)
+	if netType == "tcp" {
+		listen := netListen.(*net.TCPListener)
+		for {
+			conn, err := listen.Accept()
+			if err != nil {
+				log.Println(err)
+			}
+			go handleConn(conn, upstream+"/"+serviceName)
 		}
-		go handleConn(tcpConn, upstream+"/"+serviceName)
+	}
+	if netType == "udp" {
+		listen := netListen.(*net.UDPConn)
+		for {
+			handleConn(listen, upstream+"/"+serviceName)
+		}
 	}
 }
 
@@ -44,4 +61,56 @@ func handleConn(netConn net.Conn, url string) {
 	netConn.Close()
 	upstream.C.Close()
 	<-ch
+}
+
+// func getNetConn(v []string) (interface{}, string) {
+// 	if v[1] == "tcp" {
+// 		raddr, err := net.ResolveTCPAddr("tcp", v[0])
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		conn, err := net.DialTCP("tcp", nil, raddr)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		return conn, "tcp"
+// 	}
+// 	if v[1] == "udp" {
+// 		raddr, err := net.ResolveUDPAddr("udp", v[0])
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		conn, err := net.DialUDP("udp", nil, raddr)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		return conn, "udp"
+// 	}
+// 	return nil, "error"
+// }
+
+func getNetListen(v []string) (interface{}, string) {
+	if v[1] == "tcp" {
+		laddr, err := net.ResolveTCPAddr("tcp", v[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		listen, err := net.ListenTCP("tcp", laddr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return listen, "tcp"
+	}
+	if v[1] == "udp" {
+		laddr, err := net.ResolveUDPAddr("udp", v[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		conn, err := net.ListenUDP("udp", laddr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return conn, "udp"
+	}
+	return nil, "error"
 }

@@ -9,9 +9,9 @@ import (
 
 type Config struct {
 	Server struct {
-		Listen     string            `json:"listen"`
-		Path       string            `json:"path"`
-		Servicemap map[string]string `json:"servicemap"`
+		Listen     string              `json:"listen"`
+		Path       string              `json:"path"`
+		Servicemap map[string][]string `json:"servicemap"`
 		TLS        struct {
 			Enabled  bool   `json:"enabled"`
 			Keyfile  string `json:"keyfile"`
@@ -19,8 +19,8 @@ type Config struct {
 		} `json:"tls"`
 	} `json:"server"`
 	Client struct {
-		Upstream  string            `json:"upstream"`
-		Listenmap map[string]string `json:"listenmap"`
+		Upstream  string              `json:"upstream"`
+		Listenmap map[string][]string `json:"listenmap"`
 	} `json:"client"`
 }
 

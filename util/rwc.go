@@ -43,3 +43,7 @@ func (c *RWC) Read(p []byte) (int, error) {
 		return n, err
 	}
 }
+
+func (c *RWC) Close() error {
+	return c.C.Close()
+}
