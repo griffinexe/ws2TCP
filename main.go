@@ -7,12 +7,17 @@ import (
 	"log"
 )
 
-//TODO:add output, add authentication DONE
-//TODO:implent UDP2WS at branch fusion2 INCOMPLETE
-// https://varshneyabhi.wordpress.com/2014/12/23/simple-udp-clientserver-in-golang/
-//TODO:fix udp, ws convert at fusion3 reference:
-// https://github.com/magic000/udp2tcp
-//TODO:remove incomplete UDP support in fusion2 and make it release-ready(fusion2)
+/*
+=================TODO=================================
+02 fix udp, ws convert at fusion3 reference:
+	https://github.com/magic000/udp2tcp
+03 remove incomplete UDP support in fusion2 and make it release-ready(fusion2)
+-----------------DONE---------------------------------
+00 add output, add authentication DONE
+01 implent UDP2WS at branch fusion2 INCOMPLETE
+	https://varshneyabhi.wordpress.com/2014/12/23/simple-udp-clientserver-in-golang/
+*/
+
 func main() {
 	log.Println("WSTunnel -- Expose local services via websocket")
 	cfg := config.LoadFile("./config.json")
