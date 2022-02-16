@@ -11,6 +11,7 @@ import (
 =================TODO=================================
 02 fix udp, ws convert at fusion3 reference:
 	https://github.com/magic000/udp2tcp
+05 improve authentication method
 -----------------DONE---------------------------------
 00 add output, add authentication DONE
 01 implent UDP2WS at branch fusion2 INCOMPLETE
