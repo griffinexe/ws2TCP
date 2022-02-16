@@ -11,12 +11,13 @@ import (
 =================TODO=================================
 02 fix udp, ws convert at fusion3 reference:
 	https://github.com/magic000/udp2tcp
-04 add authentication in fusion2A
 -----------------DONE---------------------------------
 00 add output, add authentication DONE
 01 implent UDP2WS at branch fusion2 INCOMPLETE
 	https://varshneyabhi.wordpress.com/2014/12/23/simple-udp-clientserver-in-golang/
 03 remove incomplete UDP support in fusion2 and make it release-ready(fusion2)
+04 add authentication in fusion2A
+=============END TODO=================================
 */
 
 func main() {
