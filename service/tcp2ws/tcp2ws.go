@@ -20,7 +20,6 @@ func Start(c *config.Config) {
 }
 
 func handleEndpoint(serviceName string, listenNet []string, upstream string) {
-	log.Println("endpoint", serviceName, "hit")
 	netListen, netType := getNetListen(listenNet)
 	if netType == "tcp" {
 		listen := netListen.(*net.TCPListener)
@@ -29,14 +28,17 @@ func handleEndpoint(serviceName string, listenNet []string, upstream string) {
 			if err != nil {
 				log.Println(err)
 			}
+			log.Println("endpoint", serviceName, "hit")
 			go handleConn(conn, upstream+"/"+serviceName)
 		}
 	}
 	if netType == "udp" {
-		listen := netListen.(*net.UDPConn)
-		for {
-			handleConn(listen, upstream+"/"+serviceName)
-		}
+		// listen := netListen.(*net.UDPConn)
+		// for {
+		// 	handleConn(listen, upstream+"/"+serviceName)
+		// }
+		log.Println("(fusion2)skipping UDP listener")
+		return
 	}
 }
 
@@ -46,13 +48,7 @@ func handleConn(netConn net.Conn, url string) {
 		log.Println(err)
 	}
 	upstream := util.RWC{C: wsConn}
-	ch := make(chan bool)
-	go util.CopyWorker(netConn, &upstream, ch)
-	go util.CopyWorker(&upstream, netConn, ch)
-	<-ch
-	netConn.Close()
-	upstream.C.Close()
-	<-ch
+	util.IOCopy(netConn, &upstream)
 }
 
 func getNetListen(v []string) (interface{}, string) {
@@ -68,15 +64,17 @@ func getNetListen(v []string) (interface{}, string) {
 		return listen, "tcp"
 	}
 	if v[1] == "udp" {
-		laddr, err := net.ResolveUDPAddr("udp", v[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		conn, err := net.ListenUDP("udp", laddr)
-		if err != nil {
-			log.Fatal(err)
-		}
-		return conn, "udp"
+		// laddr, err := net.ResolveUDPAddr("udp", v[0])
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// conn, err := net.ListenUDP("udp", laddr)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// return conn, "udp"
+		log.Println("(fusion2)UDP not supported")
+		return nil, "udp"
 	}
 	return nil, "error"
 }

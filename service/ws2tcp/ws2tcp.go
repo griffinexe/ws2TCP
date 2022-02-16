@@ -3,7 +3,6 @@ package ws2tcp
 import (
 	"WSTunnel/util"
 	"WSTunnel/util/config"
-	"io"
 	"log"
 	"net"
 	"net/http"
@@ -40,23 +39,15 @@ func getHandler(v []string) func(w http.ResponseWriter, r *http.Request) {
 		netConn, netType := getNetConn(v)
 		if netType == "tcp" {
 			tcpConn := netConn.(*net.TCPConn)
-			biDirectionalCopy(tcpConn, &wsRWC)
+			util.IOCopy(tcpConn, &wsRWC)
 		}
 		if netType == "udp" {
-			udpConn := netConn.(*net.UDPConn)
-			biDirectionalCopy(udpConn, &wsRWC)
+			// udpConn := netConn.(*net.UDPConn)
+			// util.IOCopy(udpConn, &wsRWC)
+			log.Println("(fusion2)skipping UDP handler")
+			return
 		}
 	}
-}
-
-func biDirectionalCopy(io1, io2 io.ReadWriteCloser) {
-	ch := make(chan bool)
-	go util.CopyWorker(io1, io2, ch)
-	go util.CopyWorker(io2, io1, ch)
-	<-ch
-	io1.Close()
-	io2.Close()
-	<-ch
 }
 
 func getNetConn(v []string) (interface{}, string) {
@@ -72,15 +63,17 @@ func getNetConn(v []string) (interface{}, string) {
 		return conn, "tcp"
 	}
 	if v[1] == "udp" {
-		raddr, err := net.ResolveUDPAddr("udp", v[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		conn, err := net.DialUDP("udp", nil, raddr)
-		if err != nil {
-			log.Fatal(err)
-		}
-		return conn, "udp"
+		// raddr, err := net.ResolveUDPAddr("udp", v[0])
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// conn, err := net.DialUDP("udp", nil, raddr)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// return conn, "udp"
+		log.Println("(fusion2)UDP not supported")
+		return nil, "udp"
 	}
 	return nil, "error"
 }
