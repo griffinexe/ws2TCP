@@ -12,6 +12,7 @@ type Config struct {
 		Listen     string              `json:"listen"`
 		Path       string              `json:"path"`
 		Servicemap map[string][]string `json:"servicemap"`
+		ACL        map[string]string   `json:"acl"`
 		TLS        struct {
 			Enabled  bool   `json:"enabled"`
 			Keyfile  string `json:"keyfile"`
@@ -21,6 +22,7 @@ type Config struct {
 	Client struct {
 		Upstream  string              `json:"upstream"`
 		Listenmap map[string][]string `json:"listenmap"`
+		ACL       map[string]string   `json:"acl"`
 	} `json:"client"`
 }
 

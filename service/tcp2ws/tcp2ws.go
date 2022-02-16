@@ -5,6 +5,7 @@ import (
 	"WSTunnel/util/config"
 	"log"
 	"net"
+	"net/http"
 
 	"github.com/gorilla/websocket"
 )
@@ -13,13 +14,13 @@ func Start(c *config.Config) {
 	forever := make(chan bool)
 	log.Println("creating", len(c.Client.Listenmap), "listener(s)")
 	for k, v := range c.Client.Listenmap {
-		go handleEndpoint(k, v, c.Client.Upstream)
+		go handleEndpoint(k, v, c.Client.Upstream, c.Client.ACL[k])
 		log.Println("listener", k, v[0], v[1], "created")
 	}
 	<-forever
 }
 
-func handleEndpoint(serviceName string, listenNet []string, upstream string) {
+func handleEndpoint(serviceName string, listenNet []string, upstream string, acl string) {
 	netListen, netType := getNetListen(listenNet)
 	if netType == "tcp" {
 		listen := netListen.(*net.TCPListener)
@@ -29,7 +30,7 @@ func handleEndpoint(serviceName string, listenNet []string, upstream string) {
 				log.Println(err)
 			}
 			log.Println("endpoint", serviceName, "hit")
-			go handleConn(conn, upstream+"/"+serviceName)
+			go handleConn(conn, upstream+"/"+serviceName, acl)
 		}
 	}
 	if netType == "udp" {
@@ -42,8 +43,10 @@ func handleEndpoint(serviceName string, listenNet []string, upstream string) {
 	}
 }
 
-func handleConn(netConn net.Conn, url string) {
-	wsConn, _, err := websocket.DefaultDialer.Dial(url, nil)
+func handleConn(netConn net.Conn, url string, passwd string) {
+	header := http.Header{}
+	header.Add("SEC-WSTUNNEL-PARAMS", passwd)
+	wsConn, _, err := websocket.DefaultDialer.Dial(url, header)
 	if err != nil {
 		log.Println(err)
 	}

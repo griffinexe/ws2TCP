@@ -9,6 +9,9 @@
             "mindustry":["192.168.3.194:6567", "tcp"],
             "mindustryUDP":["192.168.3.194:6567", "udp"]
         },
+        "acl":{
+            "fileserver":"qwertyuiop"
+        },
         "tls":{
             "enabled":false,
             "keyfile":"",
@@ -23,6 +26,9 @@
             "fileserver":["127.0.0.1:9002", "tcp"],
             "mindustry":["127.0.0.1:6567", "tcp"],
             "mindustryUDP":["127.0.0.1:6567", "udp"]
+        },
+        "acl":{
+            "fileserver":"qwertyuiop"
         }
     }
 }

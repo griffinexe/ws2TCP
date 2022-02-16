@@ -16,7 +16,7 @@ func Start(c *config.Config) {
 	mux := http.NewServeMux()
 	log.Println("loading", len(c.Server.Servicemap), "endpoint(s)")
 	for k, v := range c.Server.Servicemap {
-		mux.HandleFunc(c.Server.Path+"/"+k, getHandler(v))
+		mux.HandleFunc(c.Server.Path+"/"+k, getHandler(c.Server.ACL[k], v))
 		log.Println("service", k, v[0], v[1], "loaded")
 	}
 	if c.Server.TLS.Enabled {
@@ -28,12 +28,16 @@ func Start(c *config.Config) {
 	}
 }
 
-func getHandler(v []string) func(w http.ResponseWriter, r *http.Request) {
+func getHandler(k string, v []string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("endpoint", r.URL.Path, "hit")
 		conn, err := wsUpgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Println(err)
+		}
+		if !CheckACL(r.Header.Get("SEC-WSTUNNEL-PARAMS"), k) {
+			conn.Close()
+			return
 		}
 		wsRWC := util.RWC{C: conn}
 		netConn, netType := getNetConn(v)
@@ -76,4 +80,8 @@ func getNetConn(v []string) (interface{}, string) {
 		return nil, "udp"
 	}
 	return nil, "error"
+}
+
+func CheckACL(passwd string, acl string) bool {
+	return passwd == acl
 }
