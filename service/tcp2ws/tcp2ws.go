@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/websocket"
 )
@@ -13,6 +14,14 @@ import (
 func Start(c *config.Config) {
 	forever := make(chan bool)
 	log.Println("creating", len(c.Client.Listenmap), "listener(s)")
+	if c.Client.Proxy.Enabled {
+		uProxy, err := url.Parse(c.Client.Proxy.URL)
+		if err != nil {
+			log.Fatal(err)
+		}
+		websocket.DefaultDialer.Proxy = http.ProxyURL(uProxy)
+		log.Println("proxy", c.Client.Proxy.URL, "set")
+	}
 	for k, v := range c.Client.Listenmap {
 		go handleEndpoint(k, v, c.Client.Upstream, c.Client.ACL[k])
 		log.Println("listener", k, v[0], v[1], "created")

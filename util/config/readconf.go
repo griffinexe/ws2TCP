@@ -23,6 +23,10 @@ type Config struct {
 		Upstream  string              `json:"upstream"`
 		Listenmap map[string][]string `json:"listenmap"`
 		ACL       map[string]string   `json:"acl"`
+		Proxy     struct {
+			Enabled bool   `json:"enabled"`
+			URL     string `json:"url"`
+		} `json:"proxy"`
 	} `json:"client"`
 }
 
